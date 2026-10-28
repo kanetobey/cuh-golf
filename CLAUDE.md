@@ -41,7 +41,8 @@ Tuned by Monte Carlo sims of the real engine. Par 4 averages: Safe 4.38, Steady 
 
 Sections, in order, each marked with a `/* ---- NAME ---- */` comment in the script:
 
-- **CSS**: design tokens on `:root` (felt green box lid, cream scorecard, gold pinstripe), then title/setup/play/overlay styles.
+- **Head**: standalone document (doctype, charset, viewport meta with `viewport-fit=cover`). The favicon is an inline SVG data URI (white ball on felt green) so the game stays one file with no favicon.ico request.
+- **CSS**: four base rules first (`[hidden]{display:none!important}`, safe-area padding on `:root`, body margin 0, img max-width), then design tokens on `:root` (felt green box lid, cream scorecard, gold pinstripe), then title/setup/play/overlay styles. The `[hidden]` rule matters: overlays set `display:flex`, which would otherwise beat the browser's default hidden styling and stack every overlay on the title screen.
 - **HTML**: screens `#s-title`, `#s-setup`, `#s-play`; overlays `#o-hole` (also used for the round-start card), `#o-card`, `#o-rules`, `#o-menu`, `#o-final`.
 - **DATA**: `HOLES` (par, yards, handicap, dogleg bend) expanded into per-hole tiers. Each tier is `[branchPegs, joinIndex, hazards]`. Lane order L, LR, RL, R maps to tiers by dogleg sign (`laneTier`). `TIER_NAMES`, `COLORS`, `PAR_TOTAL`.
 - **COURSE GEOMETRY**: a rounded-rectangle perimeter loop, holes spaced along it with a sinusoidal dogleg offset. Each route is a bowed branch of pegs joining the shared trunk (fairway + green). `simHole` plus the loop that fills `route.odds` runs 1500 plays per route on load.
@@ -57,6 +58,8 @@ Sections, in order, each marked with a `/* ---- NAME ---- */` comment in the scr
 - Tee odds are simulated at load from the actual engine rather than hard-coded, so they stay honest if peg counts change.
 - The round-start scorecard reuses the hole-complete overlay with the result list hidden.
 - `window.claude?.hot` lines in BOOT are harmless hot-reload hooks left over from the artifact runtime the game was first built in.
+- Every visible button is at least 44px tall, including the three camera-mode buttons (Hole, Ball, Course). Keep new controls at 44px or more.
+- The game was first built inside the Claude artifact host, which injected the document wrapper, viewport meta and base styles. Those now live in the file itself (added 2026-10-28) so it works standalone on GitHub Pages.
 
 ## Backlog (parked, do not build until asked)
 
