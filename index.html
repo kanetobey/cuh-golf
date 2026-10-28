@@ -1,7 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cuh Golf</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=Caveat:wght@500;700&display=swap">
 <style>
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
 /* Layout: one-screen app. Felt-green box lid as ground, cream scorecard panels, gold box-lid pinstripe as accent. */
 :root{
   --felt:#17483a; --felt-2:#123a2f; --felt-3:#0d2d24;
@@ -137,6 +145,8 @@ table.sc{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric
 .note li{margin:4px 0}
 .winner{font-family:var(--display);font-size:26px;text-align:center;color:var(--felt);margin:0}
 </style>
+</head>
+<body>
 
 <!-- TITLE -->
 <section class="screen frame" id="s-title">
@@ -535,3 +545,5 @@ window.claude?.hot?.snapshot?.(()=>({G}));
 function start(data){if(data&&data.G){G=data.G;G.busy=false;enterPlay()}else showTitle()}
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 </script>
+</body>
+</html>
