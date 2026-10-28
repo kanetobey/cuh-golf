@@ -1,0 +1,537 @@
+<title>Cuh Golf</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=Caveat:wght@500;700&display=swap">
+<style>
+/* Layout: one-screen app. Felt-green box lid as ground, cream scorecard panels, gold box-lid pinstripe as accent. */
+:root{
+  --felt:#17483a; --felt-2:#123a2f; --felt-3:#0d2d24;
+  --cream:#efe7d0; --cream-2:#e2d8bb; --ink:#1b1a17; --ink-2:#5a5649;
+  --gold:#d2ad55; --gold-2:#a8863a;
+  --fairway:#72bf4e; --rough:#3d9a40; --green:#2e8540; --fringe:#56b04a; --water:#3b5ed8; --sand:#f0cb8f; --flag:#d23b2a;
+  --display:'Archivo Black',Impact,'Arial Black',sans-serif;
+  --body:'Archivo',system-ui,Helvetica,Arial,sans-serif;
+  --hand:'Caveat','Segoe Script','Bradley Hand',cursive;
+  color-scheme:dark;
+}
+html{height:100%;box-sizing:border-box}
+body{height:100%;position:relative;margin:0;background:var(--felt);color:var(--cream);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+button{font:inherit;cursor:pointer;color:inherit;background:none;border:0;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* box-lid frame */
+.lid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:22px;padding-block:40px;overflow:auto}
+.lid>*{flex:none}
+.lid>.card,.lid>.logo:first-child{margin-top:auto}
+.lid>:last-child{margin-bottom:auto}
+.frame::before{content:"";position:absolute;inset:14px;border:1.5px solid var(--gold);pointer-events:none;opacity:.8;z-index:5}
+.frame::after{content:"";position:absolute;inset:22px;border:.5px solid var(--gold);pointer-events:none;opacity:.5;z-index:5}
+.logo{background:var(--cream);color:var(--ink);font-family:var(--display);font-size:clamp(34px,9vw,64px);letter-spacing:-.02em;padding:8px 22px;line-height:1;display:flex;align-items:center;gap:14px;box-shadow:0 6px 0 var(--felt-3)}
+.logo .ball{width:.75em;height:.75em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 30%,#aaa 100%);border:2px solid var(--ink)}
+.tag{font-family:var(--hand);font-size:clamp(20px,5vw,28px);color:var(--gold);text-align:center;max-width:32ch;text-wrap:balance;line-height:1.2}
+.btn{background:var(--cream);color:var(--ink);font-weight:700;padding:14px 22px;min-height:52px;min-width:160px;border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);font-size:17px;letter-spacing:.01em}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:transparent;color:var(--cream);border-color:var(--gold);box-shadow:0 4px 0 var(--gold-2)}
+.btn.ghost:active{box-shadow:0 1px 0 var(--gold-2)}
+.btn.big{font-family:var(--display);font-weight:400;font-size:22px;padding:16px 30px;min-height:64px}
+.btn:disabled{opacity:.45;cursor:default}
+.stack{display:flex;flex-direction:column;gap:12px;align-items:center}
+
+/* setup */
+.card{background:var(--cream);color:var(--ink);width:min(560px,100%);border:2px solid var(--ink);box-shadow:0 6px 0 var(--felt-3);padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.card h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;letter-spacing:-.01em}
+.card .sub{font-size:13px;color:var(--ink-2);margin:0}
+.prow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid var(--cream-2);padding-top:10px}
+@media (max-width:600px){.prow{grid-template-columns:1fr auto}.prow input{grid-column:1/-1}}
+.prow input{font:inherit;font-weight:600;font-size:16px;padding:10px 10px;min-height:46px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);min-width:0;width:100%}
+.prow select{font:inherit;font-size:15px;min-height:46px;padding:0 8px;border:1.5px solid var(--ink);background:#fff;color:var(--ink)}
+.swatches{display:flex;gap:6px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);position:relative;background:var(--c)}
+.sw[aria-pressed=true]::after{content:"";position:absolute;inset:-6px;border:2px solid var(--ink);border-radius:50%}
+.sw:disabled{opacity:.25}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:700}
+
+/* play */
+.topbar{display:flex;align-items:center;gap:12px;padding-block:10px;background:var(--felt-3);border-bottom:1px solid var(--gold-2);min-height:56px}
+.topbar .holeno{font-family:var(--display);font-size:28px;line-height:1;color:var(--gold)}
+.topbar .holeinfo{display:flex;flex-direction:column;line-height:1.15}
+.topbar .holeinfo b{font-size:15px}
+.topbar .holeinfo span{font-size:12px;color:var(--cream-2);opacity:.85}
+.topbar .spacer{flex:1}
+.ibtn{min-height:44px;min-width:44px;padding:0 12px;border:1.5px solid var(--gold-2);color:var(--cream);font-weight:600;font-size:13px}
+.play{flex:1;display:flex;flex-direction:column;min-height:0}
+.stage{flex:1;min-height:0;position:relative;background:var(--felt-2)}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cam{transform-origin:0 0;transform-box:view-box;transition:transform .9s cubic-bezier(.3,.8,.3,1)}
+.camset{position:absolute;top:10px;left:max(10px,env(safe-area-inset-left,0px));display:flex;gap:6px}
+.camset button{background:rgba(13,45,36,.85);border:1px solid var(--gold-2);color:var(--cream);font-size:12px;font-weight:700;padding:0 10px;min-height:40px;min-width:44px;letter-spacing:.04em;text-transform:uppercase}
+.camset button[aria-pressed=true]{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.ballg{transition:transform .7s cubic-bezier(.3,.8,.3,1)}
+.panel{background:var(--cream);color:var(--ink);border-top:3px solid var(--ink);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+.who{display:flex;align-items:center;gap:10px}
+.who .peg{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);background:var(--c);flex:none}
+.who .name{font-family:var(--display);font-size:20px;line-height:1;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .strokes{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-2);text-align:right;line-height:1.15}
+.who .strokes b{display:block;font-size:20px;color:var(--ink)}
+.lie{font-family:var(--hand);font-size:21px;line-height:1.1;color:var(--ink);min-height:24px}
+.act{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.tee-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tier{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:64px;padding:8px 10px;border:2px solid var(--ink);background:#fff;box-shadow:0 3px 0 var(--ink);border-left-width:8px}
+.tier:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.tier b{font-family:var(--display);font-weight:400;font-size:15px}
+.tier span{font-size:11px;color:var(--ink-2)}
+.tier em{font-style:normal;font-size:11px;font-weight:700}
+.tier.t0{border-left-color:#2e8540}.tier.t1{border-left-color:#8fbf2a}.tier.t2{border-left-color:#e0a21a}.tier.t3{border-left-color:#d23b2a}
+.dice{display:flex;gap:8px;min-width:116px}
+.die{width:54px;height:54px;background:#fff;border:2px solid var(--ink);border-radius:9px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;box-shadow:inset -3px -3px 0 #ddd}
+.die i{width:9px;height:9px;border-radius:50%;background:var(--ink);align-self:center;justify-self:center;opacity:0}
+.die.shake{animation:shake .5s}
+@keyframes shake{20%{transform:rotate(-14deg) translateX(-3px)}45%{transform:rotate(12deg) translateY(-4px)}70%{transform:rotate(-8deg)}}
+.die[hidden]{display:none}
+.die.blank{box-shadow:inset -3px -3px 0 #ddd;border-style:dashed;opacity:.7}
+.lbl{transition:opacity .5s}.lbl.dim{opacity:.18}
+.rollbtn{font-family:var(--display);font-size:22px;background:var(--felt);color:var(--cream);min-height:60px;border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);padding:0 10px}
+.rollbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.rollbtn:disabled{opacity:.5}
+.log{font-size:12.5px;color:var(--ink-2);line-height:1.3;min-height:32px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.log b{color:var(--ink)}
+.others{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border:1px solid var(--cream-2);padding:3px 8px 3px 4px;border-radius:20px;background:#fff8}
+.chip i{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ink);background:var(--c)}
+.chip.done{opacity:.55;text-decoration:line-through}
+@media (min-width:900px){
+  .play{flex-direction:row}
+  .panel{width:380px;border-top:0;border-left:3px solid var(--ink);justify-content:flex-start;padding-top:20px;gap:14px}
+  .stage{flex:1}
+}
+@media (prefers-reduced-motion:reduce){#cam,.ballg{transition:none}.die.shake{animation:none}}
+
+/* overlays */
+.ov{position:absolute;inset:0;background:rgba(13,45,36,.78);display:flex;align-items:center;justify-content:center;padding-block:20px;z-index:20;overflow:auto}
+.ov .card{max-height:100%;overflow:auto}
+.ov .card.wide{width:min(900px,100%)}
+table.sc{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.sc th,.sc td{border:1px solid var(--ink-2);padding:4px 2px;text-align:center;min-width:22px}
+@media (max-width:600px){.sc{font-size:11px}.sc .yds{display:none}.sc td.n{padding-left:4px}.sc td.n small{display:none}.sc .hw{font-size:15px}}
+.sc th{background:var(--cream-2);font-weight:700;font-size:11px;letter-spacing:.04em}
+.sc td.n{text-align:left;font-weight:700;white-space:nowrap;padding-left:8px}
+.sc td.tot{font-weight:700;background:#fff}
+.sc .hw{font-family:var(--hand);font-size:17px;line-height:1}
+.sc .u{color:#b3281a}.sc .o{color:#1f4bb8}
+.scwrap{overflow-x:auto}
+.cardsplit{display:flex;flex-direction:column;gap:10px}
+@media (min-width:900px){.cardsplit{flex-direction:row}.cardsplit table{flex:1}}
+.hole-res{display:flex;flex-direction:column;gap:8px}
+.hr{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--cream-2);padding:6px 0}
+.hr i{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);background:var(--c);flex:none}
+.hr b{flex:1}
+.hr .r{font-family:var(--hand);font-size:22px}
+.hr .s{font-variant-numeric:tabular-nums;font-weight:700;width:3ch;text-align:right}
+.note{background:#fbfaf5;border:1px solid var(--cream-2);padding:14px 16px;font-family:var(--hand);font-size:20px;line-height:1.25;color:var(--ink);position:relative;box-shadow:2px 3px 0 var(--cream-2)}
+.note::before{content:"";position:absolute;top:8px;left:12px;width:12px;height:3px;background:#777;transform:rotate(-30deg);border-radius:2px}
+.note h3{font-family:var(--hand);font-size:26px;margin:0 0 6px;text-decoration:underline wavy;font-weight:700}
+.note ul{margin:0;padding-left:20px}
+.note li{margin:4px 0}
+.winner{font-family:var(--display);font-size:26px;text-align:center;color:var(--felt);margin:0}
+</style>
+
+<!-- TITLE -->
+<section class="screen frame" id="s-title">
+  <div class="lid pad">
+    <div class="logo"><span>CUH GOLF</span><span class="ball"></span></div>
+    <p class="tag">A game of cribbage, dice and golf. House rules. One scorecard per game.</p>
+    <div class="stack">
+      <button class="btn big" id="b-new">New Round</button>
+      <button class="btn ghost" id="b-continue" hidden>Continue Round</button>
+      <button class="btn ghost" id="b-rules">The Rules</button>
+    </div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section class="screen" id="s-setup" hidden>
+  <div class="lid pad">
+    <div class="card">
+      <h2>Players &amp; tees</h2>
+      <p class="sub">Up to 4 players or teams. More than 4 people? Team up. Pick a tee color. On every hole you choose your own tee box: Safe, Steady, Aggressive or Hero. Shorter routes cut the corner but run through water.</p>
+      <div id="prows"></div>
+      <div class="row">
+        <button class="btn" id="b-addp" style="min-width:0">+ Add player</button>
+        <span class="lbl" id="pcount"></span>
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <button class="btn ghost" id="b-back" style="color:var(--ink);border-color:var(--ink);box-shadow:0 4px 0 var(--ink)">Back</button>
+        <button class="btn big" id="b-start">Tee Off</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY -->
+<section class="screen" id="s-play" hidden>
+  <div class="topbar pad">
+    <div class="holeno" id="t-hole">1</div>
+    <div class="holeinfo"><b id="t-par">Par 4 · 420 yds</b><span id="t-hcp">Handicap 12</span></div>
+    <div class="spacer"></div>
+    <button class="ibtn" id="b-card">Scorecard</button>
+    <button class="ibtn" id="b-menu" aria-label="Menu">☰</button>
+  </div>
+  <div class="play">
+    <div class="stage">
+      <svg id="svg" viewBox="0 0 400 400" preserveAspectRatio="none" aria-label="Course"><g id="cam"></g></svg>
+      <div class="camset" role="group" aria-label="Camera">
+        <button data-cam="hole" aria-pressed="true">Hole</button>
+        <button data-cam="ball" aria-pressed="false">Ball</button>
+        <button data-cam="course" aria-pressed="false">Course</button>
+      </div>
+    </div>
+    <div class="panel pad">
+      <div class="who"><span class="peg" id="w-peg"></span><span class="name" id="w-name">Kane</span><span class="strokes">this hole<b id="w-strokes">0</b></span></div>
+      <div class="lie" id="w-lie">On the tee.</div>
+      <div class="act" id="act">
+        <div class="dice"><div class="die" id="d1"></div><div class="die" id="d2" hidden></div></div>
+        <button class="rollbtn" id="b-roll">Drive</button>
+      </div>
+      <div class="tee-pick" id="tee-pick" hidden></div>
+      <div class="log" id="log">Roll two dice off the tee on a par 4 or 5.</div>
+      <div class="others" id="others"></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOLE RESULT -->
+<div class="ov pad" id="o-hole" hidden>
+  <div class="card wide">
+    <h2 id="oh-title">Hole 1 complete</h2>
+    <div class="hole-res" id="oh-list"></div>
+    <p class="lbl" style="margin:0">Scorecard</p>
+    <div class="scwrap" id="oh-table"></div>
+    <div class="row" style="justify-content:center"><button class="btn big" id="b-next">Next Hole</button></div>
+  </div>
+</div>
+
+<!-- SCORECARD -->
+<div class="ov pad" id="o-card" hidden>
+  <div class="card wide">
+    <h2 id="oc-title">Scorecard</h2>
+    <div class="scwrap" id="oc-table"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="b-cardclose">Close</button></div>
+  </div>
+</div>
+
+<!-- RULES -->
+<div class="ov pad" id="o-rules" hidden>
+  <div class="card">
+    <div class="note">
+      <h3>Cuh Golf Rules:</h3>
+      <ul>
+        <li>Grab 1 scorecard per game. If more than 4 players, team up!</li>
+        <li>Each player/team selects 1 color "tee". On every hole, pick your tee box before you drive: Safe, Steady, Aggressive or Hero. Shorter routes cut the corner but cross the hazards.</li>
+        <li>The secondary tee for each player/team has a <u>mandatory</u> "chill at the clubhouse" for the duration of the game.</li>
+        <li>Teeing off: Par 4 &amp; 5 = roll 2 dice (Driver). Par 3 = roll 1 die.</li>
+        <li>Advance tee 1 peg per number on your dice roll. Water hazard = +1 stroke and back to where you shot from. Bunker = subtract 1 number from your die roll (ex: roll 3, move 2).</li>
+        <li>After tee off, only roll with 1 die.</li>
+        <li>If you roll more than the distance between your tee &amp; the hole, you move forward to the hole and bounce back the remainder (but you always stop at least 1 peg ahead of where you shot from).</li>
+        <li>Land exactly on the cup and you're in the hole, no putt needed.</li>
+        <li>Tie after 18? The tied players play sudden death: hole 19 uses hole 1, hole 20 uses hole 2, and so on until one player has the low score.</li>
+        <li>When you're on the green, roll 1 die. If even, you made the putt! If odd, count as 1 stroke, continue to roll until even. (1 stroke each odd)</li>
+      </ul>
+    </div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" id="b-rulesclose">Close</button></div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="ov pad" id="o-menu" hidden>
+  <div class="card">
+    <h2>Menu</h2>
+    <div class="stack" style="align-items:stretch">
+      <button class="btn" id="b-menurules">The Rules</button>
+      <button class="btn" id="b-menuquit">Quit to Title (round is saved)</button>
+      <button class="btn ghost" id="b-menuclose" style="color:var(--ink);border-color:var(--ink);box-shadow:0 4px 0 var(--ink)">Back to Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div class="ov pad" id="o-final" hidden>
+  <div class="card wide">
+    <p class="winner" id="of-win">Kane wins</p>
+    <div class="scwrap" id="of-table"></div>
+    <div class="row" style="justify-content:center"><button class="btn big" id="b-again">New Round</button></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+// par, yards, handicap, dogleg bend (sign = which side the hole turns; the inside of the turn is the corner-cutting side)
+const HOLES=[
+ [4,420,12,40],[4,400,7,-55],[3,180,11,30],[5,540,2,-75],[4,420,15,55],[4,420,9,-45],[5,560,4,80],[3,220,16,-30],[4,400,13,45],
+ [4,440,5,-65],[4,440,14,50],[3,200,17,-25],[5,580,3,75],[4,400,6,-45],[4,400,8,40],[3,190,18,-30],[4,430,10,55],[5,600,1,-80]
+].map(([par,yds,hcp,bend],i)=>{const n=i+1;
+ // Four routes per hole, chosen fresh on every tee. Tuned by simulation (40k plays each):
+ //   Safe       longest, nothing to hit            par 4: mean 4.37, under par 35%, triple+ 11%
+ //   Steady     one peg shorter, one pond          par 4: mean 4.34, under par 40%, triple+ 13%
+ //   Aggressive two shorter, two ponds + a bunker  par 4: mean 4.27, under par 44%, triple+ 14%
+ //   Hero       cuts the corner, three ponds       par 4: mean 4.57, under par 44%, triple+ 19%
+ // Each route = its own branch pegs (c) joining the shared fairway at trunk peg j (bigger j = corner cut). Water = +1 stroke and back to where you shot from.
+ const greenLen=par===3?2:3;
+ const T=par===3?3:par===4?5:7; // trunk pegs (fairway + green)
+ const d=par===3?(yds>=220?1:0):par===4?(yds>=440?1:0):(yds<=540?-1:yds>=600?1:0); // hole length tweak
+ const tiers=par===3?[[4,0,{}],[4,1,{2:'b',3:'b'}],[4,1,{2:'w'}],[3,1,{1:'w'}]]
+            :par===4?[[8+d,0,{}],[8+d,1,{5:'w'}],[7+d,1,{4:'w',5:'w',6:'b'}],[7+d,2,{4:'w',5:'w',6:'w'}]]
+            :[[11+d,0,{}],[11+d,1,{5:'w'}],[11+d,2,{4:'w',5:'w',6:'b'}],[11+d,3,{4:'w',5:'w',6:'w'}]];
+ // lane assignment: hero on the inside of the dogleg, safe on the outside
+ const laneTier=bend>0?[0,1,2,3]:[3,2,1,0]; // lane L,LR,RL,R -> tier index
+ return{n,par,yds,hcp,bend,greenLen,T,tiers,laneTier,pegs:tiers[0][0]+T}});
+const TIER_NAMES=['Safe','Steady','Aggressive','Hero'];
+const TIER_BLURB=['Longest path, nothing to hit.','One peg shorter, one pond on the way.','Two pegs shorter, two ponds and a bunker.','Cuts the corner. Three ponds. Big swings.'];
+const route=(h,lane)=>h.routes[lane];
+const COLORS={red:'#d23b2a',yellow:'#f2c231',green:'#2f9a3f',white:'#f6f2e8',blue:'#3b5ed8'};
+const TEES=['L','LR','RL','R'];
+const LANE_OFF=[-39,-13,13,39];
+const PAR_TOTAL=72;
+
+/* ---------------- COURSE GEOMETRY ---------------- */
+const CW=1100,CH=2900,X0=160,X1=940,Y0=160,Y1=2740,R=220,MID=(X0+X1)/2;
+const segs=[];
+function addLine(ax,ay,bx,by){const L=Math.hypot(bx-ax,by-ay);segs.push({L,f:u=>({x:ax+(bx-ax)*u,y:ay+(by-ay)*u,tx:(bx-ax)/L,ty:(by-ay)/L})})}
+function addArc(cx,cy,a0,a1){const L=R*(a1-a0);segs.push({L,f:u=>{const a=a0+(a1-a0)*u;return{x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),tx:-Math.sin(a),ty:Math.cos(a)}}})}
+addLine(MID,Y1,X0+R,Y1);addArc(X0+R,Y1-R,Math.PI/2,Math.PI);addLine(X0,Y1-R,X0,Y0+R);addArc(X0+R,Y0+R,Math.PI,1.5*Math.PI);
+addLine(X0+R,Y0,X1-R,Y0);addArc(X1-R,Y0+R,1.5*Math.PI,2*Math.PI);addLine(X1,Y0+R,X1,Y1-R);addArc(X1-R,Y1-R,0,Math.PI/2);addLine(X1-R,Y1,MID,Y1);
+const PERIM=segs.reduce((a,s)=>a+s.L,0);
+function P(t){t=((t%PERIM)+PERIM)%PERIM;for(const s of segs){if(t<=s.L){const q=s.f(t/s.L);return{...q,nx:-q.ty,ny:q.tx}}t-=s.L}const q=segs[0].f(0);return{...q,nx:-q.ty,ny:q.tx}}
+const SEGS=HOLES.reduce((a,h)=>a+h.pegs-1,0);const GAP=120,SP=(PERIM-18*GAP)/SEGS;
+(function layout(){let t=0;for(const h of HOLES){const N=h.pegs,len=(N-1)*SP,bd=Math.sign(h.bend)*Math.min(Math.abs(h.bend),len*.26);
+ const cl=tt=>{const u=tt/(N-1),q=P(t+tt*SP);const off=bd*Math.sin(Math.PI*u)+bd*.25*Math.sin(2*Math.PI*u);return{x:q.x+q.nx*off,y:q.y+q.ny*off,nx:q.nx,ny:q.ny,tx:q.tx,ty:q.ty}};
+ const lat=(p,o)=>({...p,x:p.x+p.nx*o,y:p.y+p.ny*o});
+ h.pts=[];for(let k=0;k<N;k++)h.pts.push(cl(k));
+ const cSafe=h.tiers[0][0];const trunk=Array.from({length:h.T},(_,i)=>cl(cSafe+i));
+ // a branch of c pegs from the lane's tee peg to trunk peg j, bowed toward its own side until the pegs sit ~SP apart
+ const branch=(side,o0,c,j)=>{const end=cSafe+j;
+  const pt=(u,A)=>lat(cl(u*end),o0*(1-u)+side*A*Math.sin(Math.PI*u));
+  const arc=A=>{let L=0,prev=pt(0,A);for(let i=1;i<=80;i++){const q=pt(i/80,A);L+=Math.hypot(q.x-prev.x,q.y-prev.y);prev=q}return L};
+  let A=0;if(arc(0)<c*SP){let lo=0,hi=360;for(let i=0;i<30;i++){const mid=(lo+hi)/2;(arc(mid)<c*SP?lo=mid:hi=mid)}A=(lo+hi)/2}
+  const L=arc(A);const out=[];let acc=0,prev=pt(0,A);out.push(prev);
+  for(let i=1;i<=800&&out.length<c;i++){const q=pt(i/800,A);acc+=Math.hypot(q.x-prev.x,q.y-prev.y);prev=q;if(acc>=out.length*L/c)out.push(q)}
+  while(out.length<c)out.push(prev);return out};
+ h.routes=TEES.map((_,lane)=>{const side=lane<2?-1:1,tier=h.laneTier[lane];const [c,j,hz]=h.tiers[tier];
+  const b=branch(side,LANE_OFF[lane],c,j);const pts=b.concat(trunk.slice(j));
+  const r={tier,lane,pts,last:pts.length-1,greenStart:pts.length-h.greenLen,bLen:c,haz:{...hz},join:j};return r});
+ const t0=h.pts[0];h.tl={x:t0.x-t0.nx*100,y:t0.y-t0.ny*100};h.cup=trunk[trunk.length-1];
+ const g=trunk.slice(h.T-h.greenLen);h.gc={x:g.reduce((a,p)=>a+p.x,0)/g.length,y:g.reduce((a,p)=>a+p.y,0)/g.length};t+=(N-1)*SP+GAP}})();
+// quick odds per route (Monte Carlo with the real shot rules) for the tee-choice card
+function simHole(h,R){let pos=0,st='tee',strokes=0;const d=()=>1+Math.floor(Math.random()*6);
+ while(true){if(st==='green'){strokes++;if(d()%2===0)return strokes;continue}
+  const two=st==='tee'&&h.par>3;const raw=d()+(two?d():0);const mv=st==='bunker'?Math.max(0,raw-1):raw;strokes++;const from=pos;
+  let t=pos+mv,stk=false;if(t>R.last){t=R.last-(t-R.last);if(t<=pos&&mv>0){t=Math.min(pos+1,R.last);stk=true}}pos=t;if(pos===R.last&&!stk)return strokes;
+  if(pos>=R.greenStart)st='green';else if(R.haz[pos]==='w'){strokes++;pos=from;st=from===0?'tee':(R.haz[from]==='b'?'bunker':'fairway')}else if(R.haz[pos]==='b')st='bunker';else st='fairway'}}
+for(const h of HOLES)for(const R of h.routes){const N=1500;let u=0,o=0,s=0;for(let i=0;i<N;i++){const v=simHole(h,R);s+=v;if(v<h.par)u++;else if(v>=h.par+2)o++}R.odds={under:Math.round(100*u/N),blow:Math.round(100*o/N),mean:(s/N).toFixed(1)}}
+
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+
+function buildCourse(){
+ const o=[];const f=n=>n.toFixed(1);
+ o.push(`<rect x="0" y="0" width="${CW}" height="${CH}" fill="#f3efc9"/>`);
+ // trees ring
+ const allPts=HOLES.flatMap(h=>h.routes.flatMap(r=>r.pts));const nearHole=(x,y)=>allPts.some(p=>(p.x-x)**2+(p.y-y)**2<110*110)||HOLES.some(h=>(h.tl.x-x)**2+(h.tl.y-y)**2<70*70);
+ for(let i=0;i<360;i++){const t=i*PERIM/360,q=P(t);const side=i%2?1:-1;const d=120+rnd()*50;const x=q.x+q.nx*side*d,y=q.y+q.ny*side*d;if(rnd()<.35||nearHole(x,y))continue;
+  for(let k=0;k<3;k++){const r=9+rnd()*7;o.push(`<circle cx="${f(x+(rnd()-.5)*22)}" cy="${f(y+(rnd()-.5)*22)}" r="${f(r)}" fill="#2a7a3a" stroke="#1d5a2a" stroke-width="1"/>`)}}
+ for(const h of HOLES){
+  const lanes=h.routes.map(r=>r.pts.slice(0,r.greenStart+1).map(p=>`${f(p.x)},${f(p.y)}`).join(' '));
+  for(const fw of lanes)o.push(`<polyline points="${fw}" fill="none" stroke="#3d9a40" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>`);
+  for(const fw of lanes)o.push(`<polyline points="${fw}" fill="none" stroke="#72bf4e" stroke-width="66" stroke-linecap="round" stroke-linejoin="round"/>`);
+  const hz=[],seen=new Set();h.routes.forEach((r,k)=>{for(const i in r.haz){const p=r.pts[i];if(!seen.has(p)){seen.add(p);hz.push([p,r.haz[i],+i<r.bLen?(k<2?-1:1):0])}}});
+  for(const [p,t,side] of hz){const ang=Math.atan2(p.ty,p.tx)*180/Math.PI;
+   if(t==='w'){const o2=side?side*9:14,rx=side?22:34,ry=side?16:26;const cx=p.x+p.nx*o2,cy=p.y+p.ny*o2;o.push(`<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${rx}" ry="${ry}" transform="rotate(${f(ang)} ${f(cx)} ${f(cy)})" fill="#3b5ed8" stroke="#2a46a8" stroke-width="2"/>`)}
+   else{const o2=side?side*8:-10;const cx=p.x+p.nx*o2,cy=p.y+p.ny*o2;o.push(`<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${side?18:22}" ry="${side?13:15}" transform="rotate(${f(ang+20)} ${f(cx)} ${f(cy)})" fill="#f0cb8f" stroke="#c9a060" stroke-width="1.5"/>`)}}
+  // green
+  o.push(`<circle cx="${f(h.gc.x)}" cy="${f(h.gc.y)}" r="58" fill="#56b04a"/><circle cx="${f(h.gc.x)}" cy="${f(h.gc.y)}" r="48" fill="#2e8540" stroke="#1f6a30" stroke-width="2"/>`);
+  // tee box: 3 pegs
+  const t0=h.pts[0];const ang=Math.atan2(t0.ty,t0.tx)*180/Math.PI;
+  o.push(`<rect x="${f(t0.x-14)}" y="${f(t0.y-56)}" width="28" height="112" rx="10" transform="rotate(${f(ang)} ${f(t0.x)} ${f(t0.y)})" fill="#8fd16a" stroke="#4e9a3a" stroke-width="1.5"/>`);
+  h.routes.forEach(r=>o.push(`<polyline points="${r.pts.map(p=>`${f(p.x)},${f(p.y)}`).join(' ')}" fill="none" stroke="#2d2a1a" stroke-width=".9" opacity=".7"/>`));
+  const drawn=new Set();h.routes.forEach((r,k)=>r.pts.forEach((p,i)=>{if(drawn.has(p))return;drawn.add(p);
+   if(i===0)o.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="4" fill="#3b2a14" stroke="#e9d9a6" stroke-width="1.2"/><text x="${f(p.x-p.tx*11)}" y="${f(p.y-p.ty*11+2)}" font-family="Archivo,sans-serif" font-size="5.5" font-weight="700" fill="#1b3a1c" text-anchor="middle">${TIER_NAMES[r.tier][0]}</text>`);
+   else if(p===h.cup)o.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="5.5" fill="#111" stroke="#fff" stroke-width="1.5"/>`);
+   else o.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="3.5" fill="#3b2a14"/>`)}));
+  // flag + numbers (counter-rotated labels)
+  const cup=h.cup;
+  o.push(`<g class="lbl" data-h="${h.n}" data-x="${f(cup.x)}" data-y="${f(cup.y)}"><line x1="${f(cup.x)}" y1="${f(cup.y)}" x2="${f(cup.x)}" y2="${f(cup.y-40)}" stroke="#222" stroke-width="2"/><polygon points="${f(cup.x)},${f(cup.y-40)} ${f(cup.x+30)},${f(cup.y-31)} ${f(cup.x)},${f(cup.y-22)}" fill="#d23b2a"/><text x="${f(cup.x+8)}" y="${f(cup.y-28)}" font-family="Archivo Black,Impact,sans-serif" font-size="11" fill="#fff">${h.n}</text></g>`);
+  const tl=h.tl;
+  o.push(`<g class="lbl" data-h="${h.n}" data-x="${f(tl.x)}" data-y="${f(tl.y)}"><rect x="${f(tl.x-19)}" y="${f(tl.y-19)}" width="38" height="38" rx="6" fill="#7bc45a" stroke="#2f6a2a" stroke-width="1.5"/><text x="${f(tl.x)}" y="${f(tl.y+8)}" text-anchor="middle" font-family="Archivo Black,Impact,sans-serif" font-size="22" fill="#143a18">${h.n}</text><text x="${f(tl.x)}" y="${f(tl.y+32)}" text-anchor="middle" font-family="Archivo,sans-serif" font-size="9" font-weight="700" fill="#143a18">par ${h.par} · ${h.hcp} H</text></g>`);
+ }
+ // clubhouse
+ const cx=MID,cy=Y1-520;
+ o.push(`<g class="lbl" data-x="${cx}" data-y="${cy}"><polygon points="${cx-60},${cy-10} ${cx},${cy-60} ${cx+60},${cy-10}" fill="#7a2a1e"/><rect x="${cx-52}" y="${cy-10}" width="104" height="60" fill="#8b3a2a" stroke="#4a1d14" stroke-width="2"/><rect x="${cx-40}" y="${cy+2}" width="22" height="22" fill="#f3efc9"/><rect x="${cx+18}" y="${cy+2}" width="22" height="22" fill="#f3efc9"/><rect x="${cx-10}" y="${cy+16}" width="20" height="34" fill="#4a1d14"/><rect x="${cx-70}" y="${cy+58}" width="140" height="34" fill="#7a2a1e"/><text x="${cx}" y="${cy+72}" text-anchor="middle" font-family="Archivo Black,Impact,sans-serif" font-size="11" fill="#f3efc9">PAR 72</text><text x="${cx}" y="${cy+85}" text-anchor="middle" font-family="Archivo,sans-serif" font-size="9" font-weight="700" fill="#f3efc9">7,240 yds · CLUBHOUSE</text><g id="rack"></g></g>`);
+ o.push(`<g class="lbl" data-x="${cx}" data-y="${CH/2}"><text x="${cx}" y="${CH/2}" text-anchor="middle" font-family="Archivo Black,Impact,sans-serif" font-size="30" fill="#17483a">CUH GOLF</text><text x="${cx}" y="${CH/2+20}" text-anchor="middle" font-family="Archivo,sans-serif" font-size="11" fill="#17483a">Championship Course</text></g>`);
+ o.push(`<g id="balls"></g>`);
+ return o.join('');
+}
+
+/* ---------------- CAMERA ---------------- */
+const svg=document.getElementById('svg'),cam=document.getElementById('cam'),stage=document.querySelector('.stage');
+let VW=400,VH=400,camMode='hole',curRot=0;
+function sizeSvg(){VW=stage.clientWidth||400;VH=stage.clientHeight||400;svg.setAttribute('viewBox',`0 0 ${VW} ${VH}`);applyCamera(false)}
+new ResizeObserver(sizeSvg).observe(stage);
+const TOPUI=60; // camera buttons band
+function fit(pts,pad,rot,top=TOPUI){const a=rot*Math.PI/180,c=Math.cos(a),s=Math.sin(a);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+ for(const p of pts){const rx=p.x*c-p.y*s,ry=p.x*s+p.y*c;x0=Math.min(x0,rx);x1=Math.max(x1,rx);y0=Math.min(y0,ry);y1=Math.max(y1,ry)}
+ const w=Math.max(1,x1-x0),h=Math.max(1,y1-y0);const k=Math.min((VW-2*pad)/w,(VH-top-2*pad)/h);
+ return{k,tx:VW/2-k*(x0+x1)/2,ty:top+(VH-top)/2-k*(y0+y1)/2,rot}}
+function applyCamera(animate=true){
+ if(!G)return;const h=curH();let c;
+ const th=Math.atan2(h.gc.y-h.pts[0].y,h.gc.x-h.pts[0].x)*180/Math.PI;let rot=-90-th;while(rot>180)rot-=360;while(rot<=-180)rot+=360;
+ const holePts=h.routes.flatMap(r=>r.pts).concat([{x:h.gc.x+62,y:h.gc.y+62},{x:h.gc.x-62,y:h.gc.y-62},{x:h.pts[0].x-h.pts[0].tx*24,y:h.pts[0].y-h.pts[0].ty*24},{x:h.tl.x-h.pts[0].nx*22,y:h.tl.y-h.pts[0].ny*22}]);
+ if(camMode==='course')c=fit([{x:0,y:0},{x:CW,y:CH}],8,0);
+ else if(camMode==='ball'){const hc=fit(holePts,40,rot);const Lc=G.lie[curPlayer()],rt=Lc.lane==null?h.pts:h.routes[Lc.lane].pts;const i=Lc.pos;const win=fit(rt.slice(Math.max(0,i-5),Math.min(rt.length,i+6)),60,rot);
+  const k=Math.min(Math.max(win.k,hc.k),Math.max(hc.k*2.2,1.6));const a=rot*Math.PI/180,bp=rt[i];const rx=bp.x*Math.cos(a)-bp.y*Math.sin(a),ry=bp.x*Math.sin(a)+bp.y*Math.cos(a);
+  c={k,tx:VW/2-k*rx,ty:TOPUI+(VH-TOPUI)/2-k*ry,rot}}
+ else c=fit(holePts,Math.min(44,VW*.1),rot);
+ cam.querySelectorAll('.lbl[data-h]').forEach(el=>el.classList.toggle('dim',camMode!=='course'&&+el.dataset.h!==h.n));
+ cam.style.transition=animate?'':'none';
+ cam.style.transform=`translate(${c.tx}px,${c.ty}px) scale(${c.k}) rotate(${c.rot}deg)`;
+ if(c.rot!==curRot){curRot=c.rot;cam.querySelectorAll('.lbl').forEach(el=>el.setAttribute('transform',`rotate(${-c.rot} ${el.dataset.x} ${el.dataset.y})`))}
+ if(!animate)requestAnimationFrame(()=>cam.style.transition='');
+}
+document.querySelectorAll('.camset button').forEach(b=>b.addEventListener('click',()=>{camMode=b.dataset.cam;document.querySelectorAll('.camset button').forEach(x=>x.setAttribute('aria-pressed',x===b));applyCamera()}));
+
+/* ---------------- GAME STATE ---------------- */
+let G=null;
+const $=id=>document.getElementById(id);
+const SAVE='cuhgolf.round.v2';
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(G))}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem(SAVE))}catch(e){return null}}
+function curPlayer(){return G.order[G.turn]}
+function curH(){return HOLES[G.hole%18]}
+const isPlayoff=()=>G.hole>=18;
+const totalOf=i=>G.scores[i].slice(0,18).reduce((a,b)=>a+(b||0),0);
+function nextStep(){ // after a finished hole: 'next' | 'playoff' (tied list) | 'final' (winner)
+ if(G.hole<17)return{type:'next'};
+ const act=G.active;const val=i=>G.hole===17?totalOf(i):G.scores[i][G.hole];
+ const best=Math.min(...act.map(val));const lead=act.filter(i=>val(i)===best);
+ return lead.length===1?{type:'final',winner:lead[0]}:{type:'playoff',tied:lead}}
+function newGame(players){
+ G={players,hole:0,scores:players.map(()=>Array(18).fill(null)),lie:[],order:[],turn:0,phase:'play',log:[],busy:false,lastRoll:null};
+ startHole();G.phase='start';save();
+}
+function startHole(){if(!G.active)G.active=G.players.map((_,i)=>i);
+ G.lie=G.players.map((_,i)=>G.active.includes(i)?{pos:0,strokes:0,state:'tee',lane:null}:{pos:0,strokes:0,state:'out',lane:null});
+ if(G.hole===0)G.order=G.active.slice();
+ else{const prev=G.hole-1;G.order=G.active.slice().sort((a,b)=>G.scores[a][prev]-G.scores[b][prev]||G.order.indexOf(a)-G.order.indexOf(b))}
+ G.turn=0;G.phase='play';G.lastRoll=null;
+ G.log=[isPlayoff()?`Playoff hole ${G.hole+1} (plays as hole ${curH().n}). ${G.order.map(i=>G.players[i].name).join(' vs ')}. Low score wins.`:`Hole ${G.hole+1}. ${G.players[G.order[0]].name} has the honors.`];save()}
+function advanceTurn(){const n=G.order.length;for(let i=1;i<=n;i++){const t=(G.turn+i)%n;if(G.lie[G.order[t]].state!=='holed'){G.turn=t;return true}}return false}
+function rollDie(){return 1+Math.floor(Math.random()*6)}
+function shoot(){
+ if(G.busy||G.phase!=='play')return;const pi=curPlayer(),L=G.lie[pi],h=curH(),pl=G.players[pi];if(L.lane==null)return;const R=route(h,L.lane);
+ let msg='';
+ if(L.state==='green'){const d=rollDie();G.lastRoll=[d];L.strokes++;
+  if(d%2===0){L.state='holed';L.pos=R.last;G.scores[pi][G.hole]=L.strokes;msg=`<b>${pl.name}</b> rolled ${d}. Even. In the cup for ${L.strokes}, ${scoreName(L.strokes-h.par,L.strokes)}.`}
+  else msg=`<b>${pl.name}</b> rolled ${d}. Odd. Putt lips out, +1 stroke. Roll again.`;
+ }else{
+  const two=L.state==='tee'&&h.par>3;const dice=two?[rollDie(),rollDie()]:[rollDie()];G.lastRoll=dice;
+  const raw=dice[0]+(dice[1]||0);let mv=raw;let pre='';
+  if(L.state==='bunker'){mv=Math.max(0,raw-1);pre=' Bunker, so −1.'}
+  L.strokes++;const last=R.last,from=L.pos;let target=L.pos+mv,bounce=false;
+  let stuck=false;if(target>last){target=last-(target-last);bounce=true;if(target<=L.pos){target=Math.min(L.pos+1,last);stuck=true}}
+  L.pos=target;
+  const rollTxt=two?`${dice[0]} + ${dice[1]} = ${raw}`:`${raw}`;
+  if(target===last&&!stuck){L.state='holed';G.scores[pi][G.hole]=L.strokes;msg=`<b>${pl.name}</b> rolled ${rollTxt}.${pre}${bounce?' Bounced back':' Rolled'} right into the cup! Holed for ${L.strokes}, ${scoreName(L.strokes-h.par,L.strokes)}.`}
+  else if(target>=R.greenStart){L.state='green';msg=`<b>${pl.name}</b> rolled ${rollTxt}.${pre}${bounce?' Overshot the cup and bounced back.':''} On the green, now putt.`}
+  else if(R.haz[target]==='w'){L.strokes++;L.pos=from;L.state=from===0?'tee':(R.haz[from]==='b'?'bunker':'fairway');msg=`<b>${pl.name}</b> rolled ${rollTxt}.${pre} Splash. +1 stroke and back to where you shot from.`}
+  else if(R.haz[target]==='b'){L.state='bunker';msg=`<b>${pl.name}</b> rolled ${rollTxt}.${pre} ${mv===0?'Didn\'t get out of the bunker.':'Into the bunker.'} Next roll is −1.`}
+  else{L.state='fairway';msg=`<b>${pl.name}</b> rolled ${rollTxt}.${pre}${stuck?' Overshot the cup, bounce stops 1 peg ahead.':bounce?' Overshot the cup and bounced back to the fairway.':' Fairway.'}`}
+ }
+ G.log.unshift(msg);G.log=G.log.slice(0,3);
+ G.busy=true;renderDice(true);renderPanel();
+ setTimeout(()=>{renderBalls();if(camMode==='ball')applyCamera();
+  setTimeout(()=>{G.busy=false;
+   if(L.state==='holed'||L.state!=='green'){const more=advanceTurn();if(!more){G.phase='holeDone';save();renderPanel();showHoleResult();return}}
+   save();renderPanel();if(camMode==='ball')applyCamera();},700)},550);
+}
+function scoreName(d,st){if(st===1)return 'a hole in one';return d<=-3?'an albatross':d===-2?'an eagle':d===-1?'a birdie':d===0?'par':d===1?'a bogey':d===2?'a double bogey':d===3?'a triple bogey':`+${d}`}
+function scoreShort(d,st){if(st===1)return 'Hole in one';return d<=-3?'Albatross':d===-2?'Eagle':d===-1?'Birdie':d===0?'Par':d===1?'Bogey':d===2?'Double':d===3?'Triple':`+${d}`}
+
+/* ---------------- RENDER: PLAY ---------------- */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.hidden=s.id!==id)}
+function renderDice(shake){const r=G.lastRoll||[];const h=curH(),L=G.lie[curPlayer()];if(L.lane==null)return;const need=(L.state==='tee'&&h.par>3)?2:1;
+ [$('d1'),$('d2')].forEach((d,i)=>{const v=r[i];d.hidden=v===undefined&&i>=need;d.classList.toggle('blank',v===undefined);if(v===undefined){d.innerHTML='';return}const on={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}[v];d.innerHTML=Array.from({length:9},(_,k)=>`<i style="opacity:${on.includes(k)?1:0}"></i>`).join('');if(shake){d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake')}})}
+function lieText(L,h,R,lane){if(lane==null)return 'Pick a tee box for this hole.';const dist=R.last-L.pos;switch(L.state){case 'tee':return `${TIER_NAMES[R.tier]} route, ${R.last} pegs. ${h.par>3?'Two dice, driver.':'Par 3, one die.'}`;case 'fairway':return `Fairway, ${dist} pegs to the cup.`;case 'bunker':return `In the bunker, ${dist} to the cup. Next roll −1.`;case 'water':return `Wet. +1 stroke taken, ${dist} to the cup.`;case 'green':return 'On the green. Even sinks it, odd costs a stroke.';case 'holed':return 'Holed out.'}}
+function renderPanel(){const h=curH();$('t-hole').textContent=G.hole+1;$('t-par').textContent=`${isPlayoff()?'Playoff · ':''}Par ${h.par} · ${h.yds} yds`;$('t-hcp').textContent=isPlayoff()?`Plays as hole ${h.n} · sudden death`:`Handicap ${h.hcp} · dogleg ${h.bend>0?'right':'left'}`;
+ const pi=curPlayer(),pl=G.players[pi],L=G.lie[pi],lane=L.lane,R=lane==null?null:route(h,lane);
+ $('w-peg').style.setProperty('--c',COLORS[pl.color]);$('w-name').textContent=pl.name;$('w-strokes').textContent=L.strokes;$('w-lie').textContent=lieText(L,h,R,lane);
+ const choosing=lane==null&&G.phase==='play';$('act').hidden=choosing;$('tee-pick').hidden=!choosing;
+ if(choosing)$('tee-pick').innerHTML=TEES.map((t,k)=>{const r=h.routes[k];return `<button class="tier t${r.tier}" data-lane="${k}"><b>${TIER_NAMES[r.tier]}</b><span>${t} tee · ${r.last} pegs${Object.keys(r.haz).length?' · '+Object.values(r.haz).filter(v=>v==='w').length+' water'+(Object.values(r.haz).some(v=>v==='b')?' · sand':''):' · clean'}</span><em>under par ${r.odds.under}% · double+ ${r.odds.blow}%</em></button>`}).join('');
+ const b=$('b-roll');b.textContent=L.state==='green'?'Putt':(L.state==='tee'&&h.par>3)?'Drive':'Roll';b.disabled=G.busy||G.phase!=='play';
+ if(!G.busy&&!choosing)renderDice(false);
+ $('log').innerHTML=G.log.join('<br>');
+ $('others').innerHTML=G.players.map((p,i)=>{const l=G.lie[i];if(l.state==='out')return '';return `<span class="chip${l.state==='holed'?' done':''}" style="--c:${COLORS[p.color]}"><i></i>${p.name} · ${l.strokes}</span>`}).join('');
+}
+function renderBalls(){const g=cam.querySelector('#balls');const h=curH();
+ g.innerHTML=G.players.map((p,i)=>{const L=G.lie[i];if(L.state==='out')return '';const pt=L.lane==null?h.pts[0]:h.routes[L.lane].pts[L.pos];let x=pt.x,y=pt.y;
+  const same=G.lie.filter((l,j)=>j<i&&l.state!=='out'&&(l.lane==null?h.pts[0]:h.routes[l.lane].pts[l.pos])===pt).length;
+  if(same){x+=Math.cos(same*2.1)*7;y+=Math.sin(same*2.1)*7}
+  return `<g class="ballg" style="transform:translate(${x.toFixed(1)}px,${y.toFixed(1)}px)"><circle r="7" fill="${COLORS[p.color]}" stroke="#1b1a17" stroke-width="1.5"/></g>`}).join('');
+ const rack=cam.querySelector('#rack');const cx=MID,cy=Y1-520;rack.innerHTML=[0,1,2,3].map(i=>`<circle cx="${cx-45+i*30}" cy="${cy+105}" r="6" fill="${G.players[i]?COLORS[G.players[i].color]:'#3b2a14'}" stroke="#1b1a17" stroke-width="1.5"/>`).join('');
+}
+function enterPlay(){showScreen('s-play');if(!cam.querySelector('#balls'))cam.innerHTML=buildCourse();curRot=1e9;renderBalls();renderPanel();sizeSvg();applyCamera(false);
+ if(G.phase==='holeDone')showHoleResult();if(G.phase==='start')showStartCard();if(G.phase==='final')showFinal()}
+
+/* ---------------- OVERLAYS ---------------- */
+function showHoleResult(){const h=curH();const ns=nextStep();$('oh-title').textContent=`${isPlayoff()?'Playoff hole':'Hole'} ${G.hole+1} complete · par ${h.par}`;
+ $('oh-list').innerHTML=G.active.map(i=>{const p=G.players[i];const s=G.scores[i][G.hole];return `<div class="hr" style="--c:${COLORS[p.color]}"><i></i><b>${p.name}</b><span class="r">${scoreShort(s-h.par,s)}</span><span class="s">${s}</span></div>`}).join('');
+ $('oh-table').innerHTML=cardHTML();$('b-next').textContent=ns.type==='final'?'Final Scorecard':ns.type==='playoff'?`Tie! Playoff hole ${G.hole+2}`:`Tee off hole ${G.hole+2}`;$('oh-list').hidden=false;$('o-hole').hidden=false}
+function showStartCard(){$('oh-title').textContent='Round start · 18 holes, par 72';$('oh-list').hidden=true;$('oh-table').innerHTML=cardHTML();$('b-next').textContent='Tee off hole 1';$('o-hole').hidden=false}
+$('b-next').addEventListener('click',()=>{$('o-hole').hidden=true;if(G.phase==='start'){G.phase='play';save();renderPanel();return}const ns=nextStep();if(ns.type==='final'){G.winner=ns.winner;G.phase='final';save();showFinal();return}if(ns.type==='playoff')G.active=ns.tied;G.hole++;startHole();renderBalls();renderPanel();applyCamera()});
+function cardHTML(){const sum=(i,a,b)=>{let t=0,ok=true;for(let k=a;k<b;k++){if(G.scores[i][k]==null)ok=false;else t+=G.scores[i][k]}return ok?t:''};
+ const dot=p=>`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink);background:${COLORS[p.color]};margin-right:5px;vertical-align:-1px"></span>`;
+ const cell=(i,h)=>{const s=G.scores[i][h.n-1];return `<td class="hw ${s==null?'':s<h.par?'u':s>h.par?'o':''}">${s??''}</td>`};
+ const half=(hs,a,b,tots)=>{const head=`<tr><th>HOLE</th>${hs.map(h=>`<th>${h.n}</th>`).join('')}${tots.map(t=>`<th>${t[0]}</th>`).join('')}</tr>`;
+  const r=(label,fn,tv)=>`<tr><td class="n">${label}</td>${hs.map(h=>`<td>${fn(h)}</td>`).join('')}${tv.map(v=>`<td class="tot">${v}</td>`).join('')}</tr>`;
+  const yds=r('Yardage',h=>h.yds,tots.map(t=>t[1])).replace('<tr>','<tr class="yds">');const hcp=r('Handicap',h=>h.hcp,tots.map(()=>''));const par=r('Par',h=>h.par,tots.map(t=>t[2]));
+  const ps=G.players.map((p,i)=>`<tr><td class="n">${dot(p)}${p.name}</td>${hs.map(h=>cell(i,h)).join('')}${tots.map(t=>`<td class="tot hw">${sum(i,t[3],t[4])}</td>`).join('')}</tr>`).join('');
+  return `<table class="sc">${head}${yds}${hcp}${par}${ps}</table>`};
+ const front=half(HOLES.slice(0,9),0,9,[['OUT',3560,36,0,9]]);
+ const back=half(HOLES.slice(9),9,18,[['IN',3680,36,9,18],['TOT',7240,72,0,18]]);
+ let po='';const n=Math.max(...G.scores.map(r=>r.length));if(n>18){const cols=Array.from({length:n-18},(_,k)=>18+k);
+  po=`<table class="sc"><tr><th>PLAYOFF</th>${cols.map(k=>`<th>${k+1}</th>`).join('')}</tr><tr><td class="n">Par</td>${cols.map(k=>`<td>${HOLES[k%18].par}</td>`).join('')}</tr>${G.players.map((p,i)=>cols.some(k=>G.scores[i][k]!=null)?`<tr><td class="n">${dot(p)}${p.name}</td>${cols.map(k=>{const s=G.scores[i][k];const par=HOLES[k%18].par;return `<td class="hw ${s==null?'':s<par?'u':s>par?'o':''}">${s??'–'}</td>`}).join('')}</tr>`:'').join('')}</table>`}
+ return `<div class="cardsplit">${front}${back}</div>${po}`}
+$('b-card').addEventListener('click',()=>{$('oc-table').innerHTML=cardHTML();$('o-card').hidden=false});
+$('b-cardclose').addEventListener('click',()=>$('o-card').hidden=true);
+function showFinal(){const w=G.winner??G.active[0];const t=totalOf(w);const d=t-PAR_TOTAL;
+ $('of-win').textContent=`${G.players[w].name} wins with ${t} (${d>=0?'+':''}${d})${G.hole>=18?` in a playoff on hole ${G.hole+1}`:''}`;$('of-table').innerHTML=cardHTML();$('o-final').hidden=false}
+$('b-again').addEventListener('click',()=>{$('o-final').hidden=true;try{localStorage.removeItem(SAVE)}catch(e){}G=null;openSetup()});
+$('b-rules').addEventListener('click',()=>$('o-rules').hidden=false);$('b-menurules').addEventListener('click',()=>{$('o-menu').hidden=true;$('o-rules').hidden=false});
+$('b-rulesclose').addEventListener('click',()=>$('o-rules').hidden=true);
+$('b-menu').addEventListener('click',()=>$('o-menu').hidden=false);$('b-menuclose').addEventListener('click',()=>$('o-menu').hidden=true);
+$('b-menuquit').addEventListener('click',()=>{$('o-menu').hidden=true;save();showTitle()});
+$('b-roll').addEventListener('click',shoot);
+$('tee-pick').addEventListener('click',e=>{const b=e.target.closest('.tier');if(!b||G.busy||G.phase!=='play')return;const L=G.lie[curPlayer()];if(L.lane!=null)return;L.lane=+b.dataset.lane;const h=curH();G.log.unshift(`<b>${G.players[curPlayer()].name}</b> takes the ${TIER_NAMES[h.routes[L.lane].tier]} route.`);G.log=G.log.slice(0,3);save();renderBalls();renderPanel();if(camMode==='ball')applyCamera()});
+
+/* ---------------- SETUP ---------------- */
+let setup=[];
+const DEFAULT_NAMES=['Kyle','Brooke','Kane','Cole'];
+function openSetup(){setup=[{name:'Kyle',color:'red'},{name:'Brooke',color:'yellow'}];renderSetup();showScreen('s-setup')}
+function renderSetup(){$('prows').innerHTML=setup.map((p,i)=>`<div class="prow">
+ <input id="pn${i}" aria-label="Player ${i+1} name" value="${p.name.replace(/"/g,'&quot;')}" maxlength="14" placeholder="Name">
+ <div class="swatches" role="group" aria-label="Tee color">${Object.keys(COLORS).map(c=>`<button class="sw" data-i="${i}" data-c="${c}" style="--c:${COLORS[c]}" aria-label="${c}" aria-pressed="${p.color===c}" ${setup.some((q,j)=>j!==i&&q.color===c)?'disabled':''}></button>`).join('')}</div>
+ </div>`).join('');
+ $('pcount').textContent=`${setup.length} of 4`;$('b-addp').disabled=setup.length>=4;
+ $('prows').querySelectorAll('.sw').forEach(b=>b.addEventListener('click',()=>{syncSetup();setup[b.dataset.i].color=b.dataset.c;renderSetup()}))}
+function syncSetup(){setup.forEach((p,i)=>{p.name=$('pn'+i).value.trim()||`Player ${i+1}`})}
+$('b-addp').addEventListener('click',()=>{syncSetup();const used=setup.map(p=>p.color);const c=Object.keys(COLORS).find(k=>!used.includes(k));setup.push({name:DEFAULT_NAMES[setup.length]||`Player ${setup.length+1}`,color:c});renderSetup()});
+$('b-back').addEventListener('click',showTitle);
+$('b-start').addEventListener('click',()=>{syncSetup();newGame(setup.map(p=>({...p})));camMode='hole';document.querySelectorAll('.camset button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cam==='hole'));enterPlay()});
+$('b-new').addEventListener('click',openSetup);
+$('b-continue').addEventListener('click',()=>{G=load();if(G){G.busy=false;if(!G.active)G.active=G.players.map((_,i)=>i);enterPlay()}});
+function showTitle(){const s=load();$('b-continue').hidden=!(s&&s.phase!=='final');showScreen('s-title')}
+
+/* ---------------- BOOT ---------------- */
+window.claude?.hot?.snapshot?.(()=>({G}));
+function start(data){if(data&&data.G){G=data.G;G.busy=false;enterPlay()}else showTitle()}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+</script>
