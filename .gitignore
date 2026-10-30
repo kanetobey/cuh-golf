@@ -3,3 +3,7 @@
 ._*
 .Spotlight-V100
 .Trashes
+
+# test harness
+test/node_modules/
+test/shots/

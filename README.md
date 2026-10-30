@@ -10,6 +10,7 @@ A dice-golf board game our family invented, loosely based on CribbGolf, turned i
 - An 18-hole, par 72 course drawn in SVG, laid out in a loop around a clubhouse.
 - Every hole has four tee routes to choose from: Safe, Steady, Aggressive or Hero. Shorter routes cut the dogleg but run through water.
 - Rounds autosave to the browser, so you can quit to the title and pick up later.
+- Animated shots and moments, with tap-to-skip and a Fast play option in the menu.
 - Three camera modes: Hole (rotated so you always play "up"), Ball, and Course.
 
 ## How to play
@@ -41,17 +42,15 @@ A dice-golf board game our family invented, loosely based on CribbGolf, turned i
 
 ## Running it locally
 
-The whole game is one self-contained file, `index.html`. No build step, no dependencies beyond Google Fonts.
-
-Open the file directly in a browser, or serve the folder:
+No build step and no dependencies beyond Google Fonts. Open `index.html` directly in a browser, or serve the folder:
 
 ```sh
 python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-It is designed mobile-first for a 390px-wide viewport. In desktop browsers, use device emulation (iPhone size) to see it as intended.
+It is designed mobile-first for a 390px-wide viewport, and is tested from 320px phones up to 1920px desktops, portrait and landscape.
 
 ## Tech
 
-Vanilla HTML, CSS and JavaScript. The course is procedurally laid out and drawn as inline SVG. Route odds on the tee picker come from a small Monte Carlo simulation of the real shot engine that runs on page load.
+Vanilla HTML, CSS and JavaScript in `index.html`, `css/` and `js/`. The course is procedurally laid out and drawn as inline SVG. Route odds on the tee picker come from a small Monte Carlo simulation of the real shot engine that runs on page load. Every shot is animated (dice tumble, ball flight, hops, splashes, lip-outs, hole-in-one confetti); tap to skip, turn on Fast play in the menu, and reduced-motion settings are respected.

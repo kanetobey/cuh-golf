@@ -1,0 +1,72 @@
+/* ---- FX LAYER: shot and moment animations ----
+   Everything here is sized from the stage (container units on .fxl), animates transform/opacity only, and never takes
+   pointer events, so it can't cover or block the roll button (which lives in the panel, outside the stage). */
+:root{--spd:1}
+.fxl{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;container-type:size}
+.fxl *{pointer-events:none}
+
+/* dice tray */
+.tray{position:absolute;inset:0}
+.tray-bg{position:absolute;left:0;top:0;background:rgba(10,30,24,.88);border:1.5px solid var(--gold-2);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.tdie{position:absolute;left:0;top:0;background:#fff;border:2px solid var(--ink);border-radius:18%;box-shadow:inset -3px -3px 0 #ddd;will-change:transform}
+.tdie .face{position:absolute;inset:11%;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr)}
+.tdie .face i{width:62%;aspect-ratio:1;border-radius:50%;background:var(--ink);align-self:center;justify-self:center}
+.tdie .pulse{position:absolute;inset:-5px;border:3px solid var(--gold);border-radius:22%;opacity:0}
+.tray-tag{left:0;top:0;z-index:2}
+.die .dtag{top:-9px;right:-9px}
+.tray-tag,.die .dtag{position:absolute;background:#c9a060;color:var(--ink);font:700 11px/1 var(--body);padding:3px 5px;border-radius:8px;border:1.5px solid var(--ink)}
+.ttotal{position:absolute;left:0;top:0;color:var(--gold);font-family:var(--display);white-space:nowrap;letter-spacing:.02em;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.sline{position:absolute;left:0;top:0;width:2px;background:linear-gradient(var(--cream),transparent);border-radius:2px;opacity:0}
+
+/* peg-count chip that follows the hops */
+.pegchip{position:absolute;left:0;top:0;background:var(--ink);color:var(--cream);font:700 12px/1 var(--body);padding:5px 8px;border-radius:12px;white-space:nowrap;opacity:0;transition:opacity calc(150ms*var(--spd))}
+.pegchip.tick{animation:chiptick calc(180ms*var(--spd)) ease-out}
+@keyframes chiptick{40%{scale:1.25}}
+
+/* toast: bottom of the stage, centred, wraps instead of overflowing */
+.toast{position:absolute;left:16px;right:16px;bottom:14px;margin-inline:auto;width:fit-content;max-width:calc(100% - 32px);
+ background:var(--cream);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:.5em .9em;
+ font:700 clamp(13px,3.6cqmin,22px)/1.25 var(--body);text-align:center;text-wrap:balance;
+ transform:translateY(calc(100% + 24px));opacity:0;transition:transform calc(260ms*var(--spd)) cubic-bezier(.2,.8,.3,1),opacity calc(200ms*var(--spd))}
+.toast.on{transform:none;opacity:1}
+.toast.water{border-color:#2a46a8;box-shadow:0 3px 0 #2a46a8}
+.toast.sand{border-color:#a8863a;box-shadow:0 3px 0 #a8863a}
+
+/* banners: pill (birdie/par) and ribbon (hole in one), centred in the upper part of the stage */
+.banner{position:absolute;left:16px;right:16px;top:max(64px,32%);margin-inline:auto;width:fit-content;max-width:calc(100% - 32px);text-align:center;white-space:nowrap;transform-origin:50% 50%}
+.banner.pill{background:var(--cream);color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);font-family:var(--display);font-size:min(7cqw,9cqh,48px);padding:.28em .9em;letter-spacing:.01em}
+.banner.ribbon{top:max(64px,30%);background:linear-gradient(var(--gold),#b8923f);color:var(--ink);font-family:var(--display);font-size:min(8cqw,11cqh,64px);padding:.3em 1.25em;letter-spacing:.02em;
+ clip-path:polygon(0 0,100% 0,calc(100% - .55em) 50%,100% 100%,0 100%,.55em 50%);filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.banner.linger,.minicard.linger{transition:opacity calc(400ms*var(--spd))}
+.banner.out,.minicard.out{opacity:0!important}
+
+/* mini scorecard (birdie or better): top-right of the stage, clear of the camera buttons */
+.minicard{position:absolute;top:10px;right:max(10px,env(safe-area-inset-right,0px));background:var(--cream);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);
+ font:700 clamp(11px,2.6cqmin,17px)/1.2 var(--body);min-width:min(150px,40cqw)}
+/* narrow stages: the camera buttons fill the top edge, so the card sits bottom-right instead */
+@container (max-width:520px){.minicard{top:auto;bottom:10px}}
+.minicard .mh{display:flex;justify-content:space-between;gap:10px;background:var(--cream-2);padding:3px 8px;font-size:.8em;letter-spacing:.06em}
+.minicard .mr{display:flex;align-items:center;gap:6px;padding:4px 8px}
+.minicard .mr i{width:.9em;height:.9em;border-radius:50%;border:1.5px solid var(--ink);background:var(--c);flex:none}
+.minicard .mr b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minicard .cell{position:relative;width:2.4em;height:1.8em;display:grid;place-items:center;font-family:var(--hand);font-size:1.6em;color:#b3281a;border-left:1px solid var(--ink-2)}
+.minicard .cell svg{position:absolute;inset:-.15em -.1em;width:calc(100% + .2em);height:calc(100% + .3em);overflow:visible}
+.minicard .cell ellipse{fill:none;stroke:#b3281a;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100}
+.scorefly{position:absolute;left:0;top:0;font-family:var(--hand);font-weight:700;font-size:clamp(26px,9cqmin,44px);color:#b3281a;text-shadow:0 1px 0 #fff,0 0 6px #fff}
+
+.flash{position:absolute;inset:0;opacity:0}
+.confetti{position:absolute;inset:0}
+.cf{position:absolute;left:-4px;top:-3px;width:8px;height:6px;border-radius:1px;will-change:transform,opacity}
+
+/* stroke counter in the panel */
+.who .strokes{position:relative}
+#w-strokes{transform-origin:50% 60%;backface-visibility:hidden}
+#w-strokes.blueflash{animation:blueflash calc(700ms*var(--spd)) ease-out}
+@keyframes blueflash{0%,30%{color:#1f4bb8;text-shadow:0 0 10px #8fb0ff}100%{color:var(--ink)}}
+.plustag{position:absolute;right:100%;bottom:0;margin-right:6px;font:700 15px/1 var(--display);color:#1f4bb8;animation:plusup 1s ease-out forwards}
+@keyframes plusup{from{opacity:0;transform:translateY(8px)}20%{opacity:1;transform:none}to{opacity:0;transform:translateY(-14px)}}
+
+@media (prefers-reduced-motion:reduce){
+ .toast{transform:none;transition:opacity 150ms}
+ .pegchip.tick,#w-strokes.blueflash,.plustag{animation:none}
+}
